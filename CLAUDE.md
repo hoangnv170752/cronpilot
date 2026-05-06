@@ -22,6 +22,7 @@ yarn format           # Prettier
 ```
 
 **Run a single test file:**
+
 ```bash
 yarn test:server --reporter=verbose server/tests/jobs.test.js
 yarn test:client --reporter=verbose client/tests/JobForm.test.jsx
@@ -64,6 +65,7 @@ Client tests run in **happy-dom** (not jsdom). Server tests run in the node envi
 ### ntfy Notification Logic
 
 `ntfy_on_run` fires on **every** execution (success and error). `ntfy_on_error` fires only on failures, even when `ntfy_on_run` is off. Condition in `executor.js`:
+
 ```js
 if (job.ntfy_enabled && ((isError && job.ntfy_on_error) || job.ntfy_on_run))
 ```
@@ -73,6 +75,7 @@ if (job.ntfy_enabled && ((isError && job.ntfy_on_error) || job.ntfy_on_run))
 `GATEWAY_TOKEN` in `.env` enables the gateway. The token is passed as `?token=` in the URL for browser access (SSE cannot set custom headers). The middleware uses `timingSafeEqual` to prevent timing attacks.
 
 ### Coding
+
 - You must not commit anything or create new branches unless I told you so
 - Use ESM
 - Document everything you add with proper JSDoc

@@ -3,11 +3,11 @@
  * Licensed under Apache-2.0 with Commons Clause and Attribution/Naming Clause
  */
 
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
     include: ['server/tests/**/*.test.js'],
-    environment: 'node'
-  }
-})
+    environment: 'node',
+  },
+});

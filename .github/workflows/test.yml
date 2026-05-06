@@ -18,18 +18,10 @@ jobs:
         with:
           node-version: 22
           cache: yarn
-          cache-dependency-path: |
-            server/yarn.lock
-            client/yarn.lock
+          cache-dependency-path: yarn.lock
 
-      - name: Install root dependencies
+      - name: Install dependencies
         run: yarn install --frozen-lockfile
-
-      - name: Install server dependencies
-        run: yarn --cwd server install --frozen-lockfile
-
-      - name: Install client dependencies
-        run: yarn --cwd client install --frozen-lockfile
 
       - name: Lint
         run: yarn lint
