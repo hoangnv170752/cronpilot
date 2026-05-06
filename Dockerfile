@@ -8,19 +8,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy lockfiles and manifests first for layer caching
-COPY server/package.json server/yarn.lock ./server/
-COPY client/package.json client/yarn.lock ./client/
-
-RUN yarn --cwd server install --frozen-lockfile \
-    && yarn --cwd client install --frozen-lockfile
+# Copy manifest first for layer caching
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
 # Copy source
 COPY server/src ./server/src
 COPY client/src ./client/src
-COPY client/index.html client/vite.config.js ./client/
+COPY client/index.html ./client/
+COPY vite.config.js ./
 
-RUN yarn --cwd client build
+RUN yarn build
+
+# ---- Production deps stage ----
+FROM node:22-slim AS deps
+
+WORKDIR /app
+
+# Build tools required to compile better-sqlite3 native bindings
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile --production
 
 # ---- Production stage ----
 FROM node:22-slim
@@ -31,11 +42,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy compiled server dependencies (includes native better-sqlite3 binary)
-COPY --from=builder /app/server/node_modules ./server/node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/client/dist ./client/dist
 COPY server/src ./server/src
-COPY server/package.json ./server/
 COPY package.json ./
 
 RUN mkdir -p /data

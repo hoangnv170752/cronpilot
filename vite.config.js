@@ -8,6 +8,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  root: 'client',
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
@@ -15,8 +16,10 @@ export default defineConfig({
     }
   },
   test: {
+    root: '.',
+    include: ['client/tests/**/*.test.{js,jsx}'],
     environment: 'happy-dom',
-    setupFiles: ['./tests/setup.js'],
+    setupFiles: ['client/tests/setup.js'],
     globals: true
   }
 })

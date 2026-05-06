@@ -1,0 +1,13 @@
+/*
+ * Copyright (c) 2026 by Christian Kellner.
+ * Licensed under Apache-2.0 with Commons Clause and Attribution/Naming Clause
+ */
+
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    include: ['server/tests/**/*.test.js'],
+    environment: 'node'
+  }
+})
