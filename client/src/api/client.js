@@ -3,31 +3,31 @@
  * Licensed under Apache-2.0 with Commons Clause and Attribution/Naming Clause
  */
 
-const BASE = import.meta.env.VITE_API_BASE ?? '/api'
+const BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
 function getToken() {
-  return new URLSearchParams(window.location.search).get('token') ?? ''
+  return new URLSearchParams(window.location.search).get('token') ?? '';
 }
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json', 'X-Gateway-Token': getToken(), ...options.headers },
     ...options,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined
-  })
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+  });
 
-  if (res.status === 204) return null
+  if (res.status === 204) return null;
 
-  const data = await res.json().catch(() => ({ error: res.statusText }))
+  const data = await res.json().catch(() => ({ error: res.statusText }));
 
   if (!res.ok) {
-    const err = new Error(data.error || 'Request failed')
-    err.status = res.status
-    err.fields = data.fields
-    throw err
+    const err = new Error(data.error || 'Request failed');
+    err.status = res.status;
+    err.fields = data.fields;
+    throw err;
   }
 
-  return data
+  return data;
 }
 
 export const api = {
@@ -42,5 +42,15 @@ export const api = {
   getRun: (runId) => request(`/runs/${runId}`),
   validateCron: (expr) => request(`/jobs/validate?expr=${encodeURIComponent(expr)}`),
   validatePath: (path) => request(`/validate-path?path=${encodeURIComponent(path)}`),
-  getVersion: () => request('/version')
-}
+  getVersion: () => request('/version'),
+
+  // Redis endpoints
+  redisTest: () => request('/redis/test'),
+  redisSet: (key, value, ttl) => request('/redis/set', { method: 'POST', body: { key, value, ttl } }),
+  redisGet: (key) => request(`/redis/get/${encodeURIComponent(key)}`),
+  redisPush: (key, value) => request('/redis/push', { method: 'POST', body: { key, value } }),
+  redisCommand: (command) => request('/redis/command', { method: 'POST', body: { command } }),
+
+  // Shell command execution
+  shellExec: (command, timeout) => request('/shell/exec', { method: 'POST', body: { command, timeout } }),
+};

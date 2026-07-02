@@ -3,10 +3,16 @@
  * Licensed under Apache-2.0 with Commons Clause and Attribution/Naming Clause
  */
 
-import { Plus, CalendarClock } from 'lucide-react'
-import { Button } from '../ui/Button.jsx'
+import { Plus, CalendarClock, Settings } from 'lucide-react';
+import { Button } from '../ui/Button.jsx';
 
-export function Header({ onNew }) {
+/**
+ * Application header with navigation and actions.
+ * @param {Object} props
+ * @param {() => void} props.onNew - Callback to create a new job
+ * @param {() => void} props.onSettings - Callback to open settings dialog
+ */
+export function Header({ onNew, onSettings }) {
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between px-5 sm:px-8 py-3 bg-[#0d0d0d]/95 backdrop-blur-md border-b border-[#2a2a2a]">
       <div className="flex items-center gap-3">
@@ -22,9 +28,12 @@ export function Header({ onNew }) {
           <span className="text-[9px] font-semibold text-[#505050] uppercase tracking-[0.18em]">job scheduler</span>
         </div>
       </div>
-      <Button icon={Plus} onClick={onNew} size="sm">
-        <span className="hidden sm:inline">New Job</span>
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button icon={Settings} onClick={onSettings} size="sm" variant="ghost" title="Settings" />
+        <Button icon={Plus} onClick={onNew} size="sm">
+          <span className="hidden sm:inline">New Job</span>
+        </Button>
+      </div>
     </header>
-  )
+  );
 }

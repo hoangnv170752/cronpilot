@@ -3,96 +3,115 @@
  * Licensed under Apache-2.0 with Commons Clause and Attribution/Naming Clause
  */
 
-import { useState, useEffect } from 'react'
-import { AppShell } from './components/layout/AppShell.jsx'
-import { JobList } from './components/jobs/JobList.jsx'
-import { JobDialog } from './components/jobs/JobDialog.jsx'
-import { DeleteConfirm } from './components/jobs/DeleteConfirm.jsx'
-import { RunHistoryPanel } from './components/runs/RunHistoryPanel.jsx'
-import { UnauthorizedPage } from './components/UnauthorizedPage.jsx'
-import { useJobs } from './hooks/useJobs.js'
-import { useRunHistory } from './hooks/useRunHistory.js'
-import { useJobEvents } from './hooks/useJobEvents.js'
-import { useToast } from './components/ui/Toast.jsx'
+import { useState, useEffect } from 'react';
+import { AppShell } from './components/layout/AppShell.jsx';
+import { JobList } from './components/jobs/JobList.jsx';
+import { JobDialog } from './components/jobs/JobDialog.jsx';
+import { DeleteConfirm } from './components/jobs/DeleteConfirm.jsx';
+import { RunHistoryPanel } from './components/runs/RunHistoryPanel.jsx';
+import { RedisDialog } from './components/redis/RedisDialog.jsx';
+import { UnauthorizedPage } from './components/UnauthorizedPage.jsx';
+import { useJobs } from './hooks/useJobs.js';
+import { useRunHistory } from './hooks/useRunHistory.js';
+import { useJobEvents } from './hooks/useJobEvents.js';
+import { useToast } from './components/ui/Toast.jsx';
 
 export default function App() {
-  const [authState, setAuthState] = useState('loading') // 'loading' | 'ok' | 'unauthorized'
+  const [authState, setAuthState] = useState('loading'); // 'loading' | 'ok' | 'unauthorized'
 
   useEffect(() => {
     fetch('/api/health')
       .then((r) => r.json())
       .then(({ secured }) => {
-        if (!secured) return setAuthState('ok')
-        const token = new URLSearchParams(window.location.search).get('token')
-        setAuthState(token ? 'ok' : 'unauthorized')
+        if (!secured) return setAuthState('ok');
+        const token = new URLSearchParams(window.location.search).get('token');
+        setAuthState(token ? 'ok' : 'unauthorized');
       })
-      .catch(() => setAuthState('ok'))
-  }, [])
+      .catch(() => setAuthState('ok'));
+  }, []);
 
   const {
-    jobs, isLoading, error,
-    createJob, updateJob, deleteJob, toggleJob, triggerRun,
-    updateRunStarted, updateRunFinished,
-  } = useJobs()
-  const { addToast } = useToast()
+    jobs,
+    isLoading,
+    error,
+    createJob,
+    updateJob,
+    deleteJob,
+    toggleJob,
+    triggerRun,
+    updateRunStarted,
+    updateRunFinished,
+  } = useJobs();
+  const { addToast } = useToast();
 
-  const [dialogState, setDialogState] = useState(null)
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [historyJob, setHistoryJob] = useState(null)
+  const [dialogState, setDialogState] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [historyJob, setHistoryJob] = useState(null);
+  const [redisOpen, setRedisOpen] = useState(false);
 
-  const runHistory = useRunHistory(historyJob?.id)
+  const runHistory = useRunHistory(historyJob?.id);
 
   useJobEvents({
     onRunStarted: updateRunStarted,
     onRunFinished: (data) => {
-      updateRunFinished(data)
-      runHistory.handleRunFinished(data)
+      updateRunFinished(data);
+      runHistory.handleRunFinished(data);
     },
-  })
+  });
 
-  const handleNew    = () => setDialogState({ mode: 'create' })
-  const handleEdit   = (job) => setDialogState({ mode: 'edit', job })
-  const handleDelete = (job) => setDeleteTarget(job)
+  const handleNew = () => setDialogState({ mode: 'create' });
+  const handleEdit = (job) => setDialogState({ mode: 'edit', job });
+  const handleDelete = (job) => setDeleteTarget(job);
+  const handleSettings = () => setRedisOpen(true);
   const handleHistory = (job) => {
-    setHistoryJob(prev => {
+    setHistoryJob((prev) => {
       // When the same job is re-selected the jobId doesn't change, so useRunHistory's
       // useEffect won't re-fire. Refresh explicitly for that case only.
-      if (prev?.id === job.id) runHistory.refresh()
-      return job
-    })
-  }
+      if (prev?.id === job.id) runHistory.refresh();
+      return job;
+    });
+  };
 
   const handleSave = async (formData) => {
     if (dialogState.mode === 'create') {
-      await createJob(formData)
-      addToast('Job created')
+      await createJob(formData);
+      addToast('Job created');
     } else {
-      await updateJob(dialogState.job.id, formData)
-      addToast('Job updated')
+      await updateJob(dialogState.job.id, formData);
+      addToast('Job updated');
     }
-  }
+  };
 
   const handleToggle = async (id) => {
-    try { await toggleJob(id) } catch (e) { addToast(e.message, 'error') }
-  }
+    try {
+      await toggleJob(id);
+    } catch (e) {
+      addToast(e.message, 'error');
+    }
+  };
 
   const handleTrigger = async (id) => {
-    try { await triggerRun(id); addToast('Job triggered') } catch (e) { addToast(e.message, 'error') }
-  }
+    try {
+      await triggerRun(id);
+      addToast('Job triggered');
+    } catch (e) {
+      addToast(e.message, 'error');
+    }
+  };
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteJob(deleteTarget.id)
-      addToast(`"${deleteTarget.name}" deleted`)
-      if (historyJob?.id === deleteTarget.id) setHistoryJob(null)
-      setDeleteTarget(null)
+      await deleteJob(deleteTarget.id);
+      addToast(`"${deleteTarget.name}" deleted`);
+      if (historyJob?.id === deleteTarget.id) setHistoryJob(null);
+      setDeleteTarget(null);
     } catch (e) {
-      addToast(e.message, 'error')
+      addToast(e.message, 'error');
     }
-  }
+  };
 
-  if (authState === 'loading') return null
-  if (authState === 'unauthorized') return <UnauthorizedPage />
+  if (authState === 'loading') return null;
+  if (authState === 'unauthorized') return <UnauthorizedPage />;
 
   const sidebar = historyJob ? (
     <RunHistoryPanel
@@ -106,11 +125,16 @@ export default function App() {
       refresh={runHistory.refresh}
       onClose={() => setHistoryJob(null)}
     />
-  ) : null
+  ) : null;
 
   return (
     <>
-      <AppShell onNew={handleNew} sidebar={sidebar} onCloseSidebar={() => setHistoryJob(null)}>
+      <AppShell
+        onNew={handleNew}
+        onSettings={handleSettings}
+        sidebar={sidebar}
+        onCloseSidebar={() => setHistoryJob(null)}
+      >
         <div className="mb-6">
           <h1 className="text-xl font-semibold text-[#efefef] tracking-tight">Jobs</h1>
           <p className="text-sm text-[#505050] mt-0.5">
@@ -140,12 +164,10 @@ export default function App() {
       )}
 
       {deleteTarget && (
-        <DeleteConfirm
-          job={deleteTarget}
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setDeleteTarget(null)}
-        />
+        <DeleteConfirm job={deleteTarget} onConfirm={handleConfirmDelete} onCancel={() => setDeleteTarget(null)} />
       )}
+
+      <RedisDialog open={redisOpen} onClose={() => setRedisOpen(false)} />
     </>
-  )
+  );
 }

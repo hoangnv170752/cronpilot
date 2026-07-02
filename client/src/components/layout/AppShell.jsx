@@ -3,20 +3,32 @@
  * Licensed under Apache-2.0 with Commons Clause and Attribution/Naming Clause
  */
 
-import { useEffect, useState } from 'react'
-import { api } from '../../api/client.js'
-import { Header } from './Header.jsx'
-import { Footer } from './Footer.jsx'
+import { useEffect, useState } from 'react';
+import { api } from '../../api/client.js';
+import { Header } from './Header.jsx';
+import { Footer } from './Footer.jsx';
 
-export function AppShell({ onNew, sidebar, onCloseSidebar, children }) {
-  const [version, setVersion] = useState(null)
+/**
+ * Main application shell layout.
+ * @param {Object} props
+ * @param {() => void} props.onNew - Callback to create a new job
+ * @param {() => void} props.onSettings - Callback to open settings dialog
+ * @param {React.ReactNode} props.sidebar - Sidebar content
+ * @param {() => void} props.onCloseSidebar - Callback to close sidebar
+ * @param {React.ReactNode} props.children - Main content
+ */
+export function AppShell({ onNew, onSettings, sidebar, onCloseSidebar, children }) {
+  const [version, setVersion] = useState(null);
 
   useEffect(() => {
-    api.getVersion().then(data => setVersion(data.version)).catch(() => {})
-  }, [])
+    api
+      .getVersion()
+      .then((data) => setVersion(data.version))
+      .catch(() => {});
+  }, []);
   return (
     <div className="min-h-screen flex flex-col">
-      <Header onNew={onNew} />
+      <Header onNew={onNew} onSettings={onSettings} />
       <div className="flex flex-1">
         {sidebar && (
           <>
@@ -24,21 +36,16 @@ export function AppShell({ onNew, sidebar, onCloseSidebar, children }) {
               {sidebar}
             </aside>
             <div className="fixed inset-0 z-40 lg:hidden">
-              <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                onClick={onCloseSidebar}
-              />
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCloseSidebar} />
               <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] rounded-t-2xl overflow-hidden border-t border-[#383838] shadow-2xl">
                 {sidebar}
               </div>
             </div>
           </>
         )}
-        <main className="flex-1 px-4 sm:px-6 py-6 max-w-4xl mx-auto w-full">
-          {children}
-        </main>
+        <main className="flex-1 px-4 sm:px-6 py-6 max-w-4xl mx-auto w-full">{children}</main>
       </div>
       <Footer version={version} />
     </div>
-  )
+  );
 }
